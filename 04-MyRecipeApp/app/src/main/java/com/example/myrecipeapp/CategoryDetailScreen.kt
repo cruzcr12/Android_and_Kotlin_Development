@@ -28,7 +28,7 @@ fun CategoryDetailScreen(category: Category){
             painter = rememberAsyncImagePainter(category.strCategoryThumb),
             contentDescription = "${category.strCategory} Thumbnail",
             modifier = Modifier
-                .wrapContentSize()
+                .wrapContentSize()  // Only takes as much space as required
                 .aspectRatio(1f)
         )
 
