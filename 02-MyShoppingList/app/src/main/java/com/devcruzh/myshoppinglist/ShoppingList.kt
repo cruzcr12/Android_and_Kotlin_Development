@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.sun.org.apache.xml.internal.security.signature.Manifest
 
 /**
  * Data class that represents every shopping item in the list app
@@ -44,17 +45,62 @@ import androidx.compose.ui.unit.dp
 data class ShoppingItem(val id:Int,
                         var name:String,
                         var quantity:Int,
-                        var isEditing: Boolean = false)
+                        var isEditing: Boolean = false,
+                        var address: String = ""
+    )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShoppingListApp() {
+fun ShoppingListApp(
+    locationUtils: LocationUtils,
+    viewModel: LocationViewModel,
+    navController: NavController,
+    context: Context,
+    address: String
+) {
     // Create a var using remember to keep the list of shopping items
     var sItems by remember { mutableStateOf(listOf<ShoppingItem>()) }
     // Define if the alert dialog should be displayed or not
     var showDialog by remember { mutableStateOf(false) }
     var itemName by remember { mutableStateOf("") }
     var itemQuantity by remember { mutableStateOf("") }
+
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            if(permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+                && permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true)
+            {
+                // The access to location have been granted
+                // Request the location updated
+                //viewModel.fetchLocation(locationUtils)
+                locationUtils.requestLocationUpdate(viewModel)
+            } else {
+                // The access to location have not been granted
+                val rationalRequired = ActivityCompat.shouldShowRequestPermissionRationale(
+                    context as MainActivity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) || ActivityCompat.shouldShowRequestPermissionRationale(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+
+                if(rationalRequired){
+                    // Explain why the permission is required
+                    Toast.makeText(context,
+                        "Location permission is required for this feature to work",
+                        Toast.LENGTH_LONG).show()
+                } else {
+                    // The user has denied the permission
+                    Toast.makeText(context,
+                        "Location permission is denied, please enable it from the settings",
+                        Toast.LENGTH_LONG).show()
+                }
+
+            }
+        }
+    )
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -155,6 +201,22 @@ fun ShoppingListApp() {
                             .fillMaxWidth()
                             .padding(8.dp)
                     )
+
+                    Button(onClick = {
+                        if(locationUtils.hasLocationPermission(context)){
+                            locationUtils.requestLocationUpdates(viewModel)
+                            navController.navigate("locationscreen"){
+                                this.launchSingleTop
+                            }
+                        }else {
+                            requestPermissionLauncher.launch(arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            ))
+                        }
+                    }){
+                        Text("address")
+                    }
                 }
             }
         )
@@ -179,10 +241,20 @@ fun ShoppingListItem(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        //Name
-        Text(text = item.name, modifier = Modifier.padding(8.dp))
-        //Quantity
-        Text(text = "Qty: ${item.quantity}", modifier = Modifier.padding(8.dp))
+        Column(modifier = Modifier.weight(1f).padding(8.dp)) {
+            Row{
+                //Name
+                Text(text = item.name, modifier = Modifier.padding(8.dp))
+                //Quantity
+                Text(text = "Qty: ${item.quantity}", modifier = Modifier.padding(8.dp))
+            }
+            Row(modifier = Modifier.fillMaxWidth())) {
+                Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
+                Text(text = item.address, modifier = Modifier.padding(8.dp))
+            }
+
+        }
+
         Row(modifier = Modifier.padding(8.dp)){
             IconButton(onClick = onEditClick) {
                 Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit button for item")

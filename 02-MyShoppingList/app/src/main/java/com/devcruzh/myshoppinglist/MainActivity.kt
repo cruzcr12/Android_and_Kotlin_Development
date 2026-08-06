@@ -42,5 +42,3 @@ class MainActivity : ComponentActivity() {
 }
 
 
-// AIzaSyDNujwuaw1XTmAS5ZIztYmD5L3eGlRdRQU
-
