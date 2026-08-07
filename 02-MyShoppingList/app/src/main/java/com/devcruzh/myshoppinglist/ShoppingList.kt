@@ -1,5 +1,10 @@
 package com.devcruzh.myshoppinglist
 
+import android.Manifest
+import android.content.Context
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +24,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,7 +43,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sun.org.apache.xml.internal.security.signature.Manifest
+import androidx.core.app.ActivityCompat
+import androidx.navigation.NavController
 
 /**
  * Data class that represents every shopping item in the list app
@@ -131,6 +138,7 @@ fun ShoppingListApp(
                                 editedItem?.let {
                                     it.name = editedName
                                     it.quantity = editedQuantity
+                                    it.address = address
                                 }
                         })
                     }else{
@@ -162,7 +170,8 @@ fun ShoppingListApp(
                                     val newItem = ShoppingItem(
                                         id = sItems.size + 1,
                                         name = itemName,
-                                        quantity = itemQuantity.toInt()
+                                        quantity = itemQuantity.toInt(),
+                                        address = address
                                     )
                                     // Adding the new item to the list
                                     sItems = sItems + newItem
@@ -204,7 +213,7 @@ fun ShoppingListApp(
 
                     Button(onClick = {
                         if(locationUtils.hasLocationPermission(context)){
-                            locationUtils.requestLocationUpdates(viewModel)
+                            locationUtils.requestLocationUpdate(viewModel)
                             navController.navigate("locationscreen"){
                                 this.launchSingleTop
                             }
@@ -248,7 +257,7 @@ fun ShoppingListItem(
                 //Quantity
                 Text(text = "Qty: ${item.quantity}", modifier = Modifier.padding(8.dp))
             }
-            Row(modifier = Modifier.fillMaxWidth())) {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
                 Text(text = item.address, modifier = Modifier.padding(8.dp))
             }
